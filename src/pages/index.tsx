@@ -14,26 +14,19 @@ export default function Home() {
   ];
 
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: "2rem", fontFamily: "system-ui" }}>
+    <main className="max-w-xl mx-auto p-8 font-sans">
       <h1>Studia Tech Test</h1>
       <p>Select a tutor to view and book their sessions:</p>
-      <ul style={{ listStyle: "none", padding: 0 }}>
+      <ul className="list-none p-0">
         {tutors.map((tutor) => (
-          <li key={tutor.id} style={{ marginBottom: "1rem" }}>
+          <li key={tutor.id} className="mb-4">
             <Link
               href={`/sessions/${tutor.id}`}
-              style={{
-                display: "block",
-                padding: "1rem",
-                border: "1px solid #ddd",
-                borderRadius: 8,
-                textDecoration: "none",
-                color: "inherit",
-              }}
+              className="block p-4 border border-gray-300 rounded-lg no-underline text-inherit"
             >
               <strong>{tutor.name}</strong>
               <br />
-              <span style={{ color: "#666" }}>{tutor.subject}</span>
+              <span className="text-gray-500">{tutor.subject}</span>
             </Link>
           </li>
         ))}

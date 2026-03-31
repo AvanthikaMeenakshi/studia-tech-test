@@ -19,7 +19,7 @@ import React from "react";
  *    - Show a "Book" button that calls onBook when clicked
  *    - Disable the button and show "Full" when no spots remain
  *    - Show a loading/disabled state while a booking is in progress
- *    - Use inline styles or a simple CSS approach (no library needed)
+ *    - Tailwind CSS is available for styling
  *
  *  This component is deliberately open-ended. We care about:
  *    - Clean TypeScript (proper typing of props)

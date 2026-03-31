@@ -34,7 +34,7 @@ export default function TutorSessionsPage() {
   // TODO: Implement this page
 
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: "2rem", fontFamily: "system-ui" }}>
+    <main className="max-w-xl mx-auto p-8 font-sans">
       <h1>Tutor Sessions</h1>
       <p>TODO: Fetch and display available sessions for tutor {tutorId}</p>
     </main>
