@@ -43,7 +43,9 @@ describe("session.getAvailableSessions", () => {
 
     // Quadratics has capacity 5, 1 confirmed + 1 cancelled
     // Should still be available with 4 spots
-    const quadratics = result.find((s: any) => s.title === "Quadratic Equations");
+    const quadratics = result.find(
+      (s: any) => s.title === "Quadratic Equations",
+    );
     expect(quadratics).toBeDefined();
     expect(quadratics.spotsRemaining).toBe(4);
   });
@@ -90,7 +92,7 @@ describe("session.bookSession", () => {
       caller.session.bookSession({
         studentId: "student-01",
         sessionId: "nonexistent-session",
-      })
+      }),
     ).rejects.toThrow();
   });
 
@@ -99,7 +101,7 @@ describe("session.bookSession", () => {
       caller.session.bookSession({
         studentId: "student-02",
         sessionId: "session-past-01",
-      })
+      }),
     ).rejects.toThrow();
   });
 
@@ -109,7 +111,7 @@ describe("session.bookSession", () => {
       caller.session.bookSession({
         studentId: "student-01",
         sessionId: "session-future-02",
-      })
+      }),
     ).rejects.toThrow();
   });
 
@@ -119,7 +121,7 @@ describe("session.bookSession", () => {
       caller.session.bookSession({
         studentId: "student-01",
         sessionId: "session-future-01",
-      })
+      }),
     ).rejects.toThrow();
   });
 
@@ -149,7 +151,7 @@ describe("session.cancelBooking", () => {
     await expect(
       caller.session.cancelBooking({
         bookingId: "nonexistent-booking",
-      })
+      }),
     ).rejects.toThrow();
   });
 
@@ -157,7 +159,7 @@ describe("session.cancelBooking", () => {
     await expect(
       caller.session.cancelBooking({
         bookingId: "booking-cancelled-01",
-      })
+      }),
     ).rejects.toThrow();
   });
 

@@ -1,4 +1,7 @@
 import { useRouter } from "next/router";
+import { useState } from "react";
+import { trpc } from "~/utils/trpc";
+import SessionCard from "~/components/SessionCard";
 
 /**
  * ============================================================
@@ -27,16 +30,110 @@ import { useRouter } from "next/router";
  * ============================================================
  */
 
+const STUDENT_ID = "student-01";
+
 export default function TutorSessionsPage() {
   const router = useRouter();
   const tutorId = router.query.tutorId as string;
 
-  // TODO: Implement this page
+  const [bookingSessionId, setBookingSessionId] = useState<string | null>(null);
+  const [bookingErrors, setBookingErrors] = useState<Record<string, string>>(
+    {},
+  );
+
+  const {
+    data: sessions,
+    isLoading,
+    isError,
+    refetch,
+  } = trpc.session.getAvailableSessions.useQuery(
+    { tutorId },
+    { enabled: !!tutorId },
+  );
+
+  const { mutate: bookSession } = trpc.session.bookSession.useMutation({
+    onSuccess: (_, variables) => {
+      setBookingErrors((prev) => {
+        const next = { ...prev };
+        delete next[variables.sessionId];
+        return next;
+      });
+      void refetch();
+    },
+    onError: (error, variables) => {
+      setBookingErrors((prev) => ({
+        ...prev,
+        [variables.sessionId]: error.message,
+      }));
+    },
+    onSettled: () => {
+      setBookingSessionId(null);
+    },
+  });
+
+  function handleBook(sessionId: string) {
+    setBookingSessionId(sessionId);
+    bookSession({ sessionId, studentId: STUDENT_ID });
+  }
+
+  if (isLoading) {
+    return (
+      <PageShell>
+        <p className="text-gray-500">Loading sessions...</p>
+      </PageShell>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageShell>
+        <p className="text-red-500">
+          Failed to load sessions. Please try again.
+        </p>
+      </PageShell>
+    );
+  }
+
+  if (!sessions?.length) {
+    return (
+      <PageShell>
+        <p className="text-gray-500">No available sessions.</p>
+      </PageShell>
+    );
+  }
 
   return (
-    <main className="max-w-xl mx-auto p-8 font-sans">
-      <h1>Tutor Sessions</h1>
-      <p>TODO: Fetch and display available sessions for tutor {tutorId}</p>
+    <PageShell>
+      <ul className="flex flex-col gap-3">
+        {sessions.map((session) => (
+          <li key={session.id}>
+            <SessionCard
+              title={session.tutor.subject}
+              startsAt={new Date(session.startsAt)}
+              endsAt={new Date(session.endsAt)}
+              remainingSpots={session.spotsRemaining}
+              isBooking={bookingSessionId === session.id}
+              onBook={() => handleBook(session.id)}
+            />
+            {bookingErrors[session.id] && (
+              <p className="mt-2 rounded bg-red-100 p-3 text-sm text-red-700">
+                {bookingErrors[session.id]}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </PageShell>
+  );
+}
+
+function PageShell({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="mx-auto max-w-xl p-8 font-sans">
+      <h1 className="mb-6 text-xl font-bold text-gray-900">
+        Available Sessions
+      </h1>
+      {children}
     </main>
   );
 }
