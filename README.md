@@ -1,90 +1,35 @@
-# Studia Full-Stack Engineering Test
+## Approach
 
-**Time limit: 45 minutes**
+I started with the backend tRPC procedures to ensure all business rules and edge cases were handled correctly. I used the tests to guide correctness, but there were a few areas where I had to make decisions, especially around booking concurrency, re-booking behaviour, and ensuring cancelled bookings didn’t affect capacity.
 
-## Overview
+Once the API layer was stable, I implemented the frontend components, focusing on clear state handling (loading, booking, error) and keeping components small and reusable.
 
-Studia is building a platform where students subscribe to tutors for livestreamed lessons. In this test, you'll implement the core booking logic for our tutor session system.
+## Improvements
 
-You'll work across the stack: writing tRPC procedures that query a Prisma/SQLite database, and building React components that consume them.
+If this were a production system, I would:
 
-## What you need to do
+- Move capacity enforcement to a stricter DB-level guarantee (e.g. row-level locking or optimistic concurrency)
+- Consider queueing or retry strategies for high contention scenarios
+- Separate read/write models (CQRS-style) for better scalability
+- Add pagination and filtering to session queries
+- Add structured logging around booking attempts and failures
+- Track metrics such as booking success rate and contention
+- Add integration tests for concurrent booking scenarios
+- Encapsulate booking rules into a service layer instead of inline logic
 
-### Part 1: Backend — tRPC Session Router (primary focus)
+## UI improvements
 
-Open `src/server/routers/session.ts`. You'll find four procedures stubbed out with `throw new Error("Not implemented")`. Implement all four:
+- If the request resolves too quickly, the loading state flashes and feels like a flicker. I’d enforce a minimum loading duration and add a spinner to avoid layout shift.
+- Extend test coverage with React Testing Library for component states, and Cypress e2e tests covering the full book flow
+- Introduce clearer domain types (e.g. BookingStatus enum shared across layers)
+- Surface session availability (e.g. “3 spots left”) at the tutor list level to help users make quicker decisions and reduce unnecessary navigation
+- Show a success state (e.g. “Booked ✓”) via toast notifications
+- Would make the time UX better: Format times relative to the user (e.g. “Today at 3:00 PM”, “Tomorrow”) to improve readability and highlight upcoming sessions (e.g. within next 24 hours)
 
-1. **`getAvailableSessions`** — Fetch a tutor's upcoming sessions that still have open spots
-2. **`bookSession`** — Book a student into a session, with proper validation
-3. **`cancelBooking`** — Cancel an existing booking (soft delete — set status, don't remove)
-4. **`getStudentBookings`** — Retrieve a student's bookings with session and tutor details
+## Future Direction
 
-Each procedure has detailed requirements in its JSDoc comment. Read them carefully — the edge cases matter.
+Given scale (e.g. thousands of concurrent bookings), I would evolve this into an event-driven system:
 
-### Part 2: Frontend — React Components (secondary focus)
-
-1. **`src/components/SessionCard.tsx`** — A card component displaying a session with a booking button
-2. **`src/pages/sessions/[tutorId].tsx`** — A page that lists available sessions and handles booking
-
-We are **not** judging visual design. We're looking at TypeScript quality, state management, and how you handle loading/error states.
-
-## Getting started
-
-```bash
-# Install dependencies
-npm install
-
-# Setup local ENV
-cp .env.example .env
-
-# Set up the database (push schema + seed data)
-npm run db:setup
-
-# Run the dev server
-npm run dev
-
-# Run tests (this is how we assess Part 1)
-npm test
-```
-
-## How we'll evaluate
-
-Your work is assessed by running `npm test`. All 19 tests should pass for full marks on Part 1.
-
-For Part 2, we'll review the code manually — looking at component structure, TypeScript usage, and how you handle the booking flow.
-
-## What's provided for you
-
-- Prisma schema and seed data (`prisma/`)
-- tRPC initialisation and root router (`src/server/trpc.ts`, `src/server/routers/_app.ts`)
-- Database client (`src/server/db.ts`)
-- tRPC client utilities (`src/utils/trpc.ts`)
-- Next.js API handler (`src/pages/api/trpc/[trpc].ts`)
-- Landing page (`src/pages/index.tsx`)
-- Complete test suite (`__tests__/`)
-
-## What you should NOT do
-
-- Do not modify the test files
-- Do not modify the Prisma schema
-- Do not modify the provided server scaffolding (trpc.ts, db.ts, _app.ts)
-- Do not add additional npm packages (everything you need is already installed)
-
-## Tech stack
-
-- **Next.js 14** with TypeScript
-- **tRPC v10** for type-safe APIs
-- **Prisma** with SQLite
-- **Zod** for input validation
-- **Vitest** for testing
-- **React 18**
-
-## Tips
-
-- Start with the backend procedures — they're the bulk of the marks
-- Run `npm test` frequently to check your progress
-- The seed data is designed to test edge cases: past sessions, full sessions, cancelled bookings
-- The `@@unique([studentId, sessionId])` constraint in the schema is relevant to the re-booking requirement
-- You can use `npx prisma studio` to inspect the database visually
-
-Good luck.
+- Booking requests handled via API → published to a queue
+- Worker processes bookings sequentially per session
+- Ensures strict capacity guarantees without heavy DB contention
